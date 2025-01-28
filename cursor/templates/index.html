@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Gönderim Sistemi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4bb543;
+            --warning-color: #f9c74f;
+            --error-color: #ef233c;
+            --background-color: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .container {
+            max-width: 1000px;
+            padding: 2rem;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+            color: white;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .form-control, .btn {
+            border-radius: 8px;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 0.8rem 2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .status-waiting {
+            color: var(--warning-color);
+        }
+
+        .status-delivered {
+            color: var(--success-color);
+        }
+
+        .status-error {
+            color: var(--error-color);
+        }
+
+        .char-count-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+        }
+
+        .char-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .char-count-warning {
+            color: var(--warning-color);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-section {
+            margin-top: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .result-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .table th {
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            padding: 1rem;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .feature-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge.waiting {
+            background-color: rgba(249, 199, 79, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-badge.delivered {
+            background-color: rgba(75, 181, 67, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-badge.error {
+            background-color: rgba(239, 35, 60, 0.2);
+            color: var(--error-color);
+        }
+
+        .file-upload-container {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-container:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .input-group-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-card">
+            <div class="header">
+                <h2><i class="fas fa-paper-plane"></i> SMS Gönderim Sistemi</h2>
+            </div>
+            
+                <form id="smsForm" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label for="message" class="form-label">
+                        <i class="feature-icon fas fa-envelope"></i>Mesaj İçeriği
+                    </label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                    <div class="char-count-container">
+                        <div class="char-count">
+                            Karakter sayısı: <span id="charCount">0</span>
+                        </div>
+                        <div id="charWarning" class="char-count-warning" style="display: none;">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                Uzun mesaj birden fazla SMS olarak gönderilecek
+                        </div>
+                        </div>
+                    </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="feature-icon fas fa-phone"></i>Alıcı Numaralar
+                        </h5>
+
+                    <div class="mb-3">
+                            <label for="manual_numbers" class="form-label">Manuel Numara Girişi</label>
+                            <textarea class="form-control" id="manual_numbers" name="manual_numbers" 
+                                    rows="4" placeholder="Her satıra bir numara gelecek şekilde yazın"></textarea>
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Kabul edilen numara formatları:
+                                <ul class="mb-0 mt-1">
+                                    <li>5051234567 (10 haneli)</li>
+                                    <li>05051234567 (11 haneli, 0 ile başlayan)</li>
+                                    <li>905051234567 (12 haneli, 90 ile başlayan)</li>
+                                    <li>+905051234567 (13 haneli, +90 ile başlayan)</li>
+                                </ul>
+                            </div>
+                    </div>
+
+                        <div class="file-upload-container" onclick="document.getElementById('number_file').click()">
+                            <i class="file-upload-icon fas fa-file-upload"></i>
+                            <p class="mb-1">Excel veya TXT Dosyası Yükleyin</p>
+                            <p class="text-muted small">veya buraya sürükleyip bırakın</p>
+                            <input type="file" class="d-none" id="number_file" name="number_file" accept=".xlsx,.xls,.txt">
+                        </div>
+                        <div id="selectedFileName" class="small text-muted"></div>
+                    </div>
+                    </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i> SMS Gönder
+                    </button>
+                </div>
+                </form>
+
+            <div id="resultSection" class="result-section">
+                <h4 class="mb-3">
+                    <i class="feature-icon fas fa-list-alt"></i>SMS Gönderim Raporu
+                </h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Tarih/Saat</th>
+                                    <th>Numara</th>
+                                    <th>Durum</th>
+                                    <th>Mesaj</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // File upload handling
+            $('#number_file').on('change', function() {
+                const fileName = this.files[0]?.name;
+                if (fileName) {
+                    $('#selectedFileName').text('Seçilen dosya: ' + fileName);
+                }
+            });
+
+            // Drag and drop handling
+            const dropZone = $('.file-upload-container');
+            
+            dropZone.on('dragover', function(e) {
+                e.preventDefault();
+                $(this).css('background-color', 'rgba(67, 97, 238, 0.1)');
+            });
+
+            dropZone.on('dragleave', function(e) {
+                e.preventDefault();
+                $(this).css('background-color', '#fff');
+            });
+
+            dropZone.on('drop', function(e) {
+                e.preventDefault();
+                $(this).css('background-color', '#fff');
+                
+                const file = e.originalEvent.dataTransfer.files[0];
+                if (file) {
+                    const fileInput = $('#number_file')[0];
+                    fileInput.files = e.originalEvent.dataTransfer.files;
+                    $('#selectedFileName').text('Seçilen dosya: ' + file.name);
+                }
+            });
+
+            // Character counter
+            $('#message').on('input', function() {
+                const charCount = $(this).val().length;
+                $('#charCount').text(charCount);
+                $('#charWarning').toggle(charCount > 160);
+            });
+
+            // Form submission
+            $('#smsForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                $('#loadingOverlay').css('display', 'flex');
+                const formData = new FormData(this);
+                
+                $.ajax({
+                    url: '/send_sms',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#loadingOverlay').hide();
+                        $('#resultSection').addClass('visible').show();
+                        
+                        if (response.status === 'success') {
+                            updateReportTable(response.all_reports);
+                            
+                            if (response.invalid_numbers && response.invalid_numbers.length > 0) {
+                                alert('Bazı numaralar geçersiz format nedeniyle işleme alınmadı: ' + 
+                                      response.invalid_numbers.join(', '));
+                            }
+                        } else {
+                            alert('Hata: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        $('#loadingOverlay').hide();
+                        alert('Sistem hatası oluştu. Lütfen tekrar deneyin.');
+                    }
+                });
+            });
+
+            function updateReportTable(reports) {
+                const tbody = $('#reportTable');
+                tbody.empty();
+                
+                reports.slice().reverse().forEach(report => {
+                    report.numbers.forEach(number => {
+                        const status = getStatusFromReport(report.report, number);
+                        const row = `
+                            <tr>
+                                <td>${report.timestamp}</td>
+                                <td>${number}</td>
+                                <td>
+                                    <span class="status-badge ${status.class}">
+                                        <i class="fas ${status.icon}"></i>
+                                        ${status.text}
+                                    </span>
+                                </td>
+                                <td>${report.message}</td>
+                            </tr>
+                        `;
+                        tbody.prepend(row);
+                    });
+                });
+            }
+
+            function getStatusFromReport(reportList, number) {
+                if (!reportList || reportList.length === 0) {
+                    return { 
+                        text: 'Beklemede', 
+                        class: 'waiting',
+                        icon: 'fa-clock'
+                    };
+                }
+                
+                const numberReport = reportList.find(r => r.Number === number);
+                if (!numberReport) {
+                    return { 
+                        text: 'Beklemede', 
+                        class: 'waiting',
+                        icon: 'fa-clock'
+                    };
+                }
+                
+                if (numberReport.Status === 'DELIVERED') {
+                    return { 
+                        text: 'İletildi', 
+                        class: 'delivered',
+                        icon: 'fa-check-circle'
+                    };
+                } else if (numberReport.Status === 'ERROR') {
+                    return { 
+                        text: 'Hata', 
+                        class: 'error',
+                        icon: 'fa-exclamation-circle'
+                    };
+                } else {
+                    return { 
+                        text: 'Beklemede', 
+                        class: 'waiting',
+                        icon: 'fa-clock'
+                    };
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
